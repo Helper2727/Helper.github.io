@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Pages - Resources</title>
+    <style>
+        /* Add your CSS styles here */
+        .folder-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .folder-list li {
+            margin: 5px 0;
+        }
+
+        .folder-list .folder-name {
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .folder-list ul {
+            display: none;
+        }
+
+        .folder-list ul.open {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>King of School</h1>
+    <ul id="fileList" class="folder-list"></ul>
+
+    <script>
+        // Function to fetch contents of a folder
+        function fetchFolderContents(folderUrl, parentList) {
+            fetch(folderUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Filter out files and folders from the response
+                    const files = data.filter(item => item.type === 'file');
+                    const folders = data.filter(item => item.type === 'dir');
+
+                    // Display files
+                    files.forEach(file => {
+                        const listItem = document.createElement('li');
+                        const link = document.createElement('a');
+                        link.textContent = file.name;
+                        link.href = file.download_url;
+                        link.download = file.name;
+                        listItem.appendChild(link);
+                        parentList.appendChild(listItem);
+                    });
+
+                    // Display folders
+                    folders.forEach(folder => {
+                        const listItem = document.createElement('li');
+                        const folderName = document.createElement('span');
+                        folderName.textContent = folder.name;
+                        folderName.classList.add('folder-name');
+                        listItem.appendChild(folderName);
+                        parentList.appendChild(listItem);
+
+                        const nestedList = document.createElement('ul');
+                        listItem.appendChild(nestedList);
+
+                        // Add click event to folder name to fetch contents when expanded
+                        folderName.addEventListener('click', function() {
+                            if (nestedList.classList.contains('open')) {
+                                nestedList.classList.remove('open');
+                            } else {
+                                if (nestedList.childElementCount === 0) {
+                                    fetchFolderContents(folder.url, nestedList);
+                                }
+                                nestedList.classList.add('open');
+                            }
+                        });
+                    });
+                })
+                .catch(error => {
+                    console.error('Error fetching data:', error);
+                });
+        }
+
+        // Fetch the contents of the 'resources' folder from the repository using GitHub API
+        fetchFolderContents('https://api.github.com/repos/Kingcruz27/Resourcescollection.io/contents/resources', document.getElementById('fileList'));
+    </script>
+</body>
+</html>
